@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Royal Chess Matrix</title>
+    <style>
+        body {
+            margin: 0; padding: 0;
+            background: #0d0a07;
+            font-family: 'Georgia', serif;
+            color: #e5d1a6;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+            user-select: none; -webkit-user-select: none;
+        }
+
+        /* INLINE COMPACT EMBEDDED LOGO BRANDING BANNER */
+        .royal-header-plaque {
+            height: 7vh;
+            min-height: 45px;
+            max-height: 65px;
+            margin-bottom: 1.5vh;
+            background: linear-gradient(135deg, #24140d 0%, #170c07 100%);
+            border: 2px double #a68023;
+            border-radius: 6px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.6), inset 0 0 12px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 0 25px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .plaque-vector-logo {
+            width: 3.5vh;
+            height: 3.5vh;
+            min-width: 24px;
+            min-height: 24px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-image: url('logo.png');
+            flex-shrink: 0;
+        }
+
+        .plaque-title-text {
+            font-size: clamp(0.75rem, 2vh, 1.05rem);
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #ebd185;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* SCREEN-FIT RESPONSIVE CONTROLLER FRAME */
+        #game-frame {
+            display: flex;
+            flex-direction: column;
+            width: 95vw;
+            height: 85vh;
+            max-width: 1024px;
+            max-height: 760px;
+            background: linear-gradient(135deg, #26150d 0%, #0f0602 100%);
+            border: 6px solid #140804;
+            outline: 2px solid #a68023;
+            border-radius: 4px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.9), inset 0 0 40px rgba(0,0,0,0.9);
+            overflow: hidden;
+            position: relative;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        /* BRASS HUD PANEL */
+        #radar-hud {
+            height: 10%;
+            min-height: 50px;
+            background: rgba(12, 6, 3, 0.95);
+            border-bottom: 2px solid #a68023;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4%;
+            z-index: 20;
+            box-sizing: border-box;
+        }
+
+        .hud-title-plate {
+            background: linear-gradient(to bottom, #ebd185, #94711c);
+            border: 1px solid #d4be72;
+            padding: 4px 15px;
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.3);
+        }
+
+        .hud-title {
+            font-size: clamp(0.7rem, 1.8vh, 1rem);
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #1a0f02;
+            margin: 0;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .control-cluster {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-ui {
+            background: linear-gradient(to bottom, #fcfaf2, #cecece);
+            color: #1a1a1a;
+            border: 1px solid #888888;
+            padding: 6px 16px;
+            font-size: clamp(0.65rem, 1.5vh, 0.8rem);
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+            transition: all 0.15s ease;
+        }
+
+        .btn-ui:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #ffffff, #e0e0e0);
+            transform: translateY(-1px);
+        }
+
+        .btn-ui:disabled {
+            background: #241d16; color: #4d4339; border-color: #30271e; cursor: not-allowed; box-shadow: none; transform: none;
+        }
+
+        .counter-satellite-ring {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: #0d0404;
+            border: 2px solid #9c2424;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #countdown-core {
+            font-size: 1.1rem; font-weight: bold; color: #e04444; font-family: 'Courier New', monospace;
+        }
+
+        /* FLEET LINING SLOTS */
+        .fleet-staging-bar {
+            height: 10%;
+            background: rgba(8, 4, 2, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3.5%;
+            position: relative;
+            z-index: 15;
+            box-sizing: border-box;
+        }
+        
+        .staging-slot-anchor {
+            width: 7vh; height: 7vh;
+            max-width: 54px; max-height: 54px;
+            border-radius: 50%;
+        }
+
+        /* ARENA MAIN MATRIX ANDSIDEBAR LAYOUT */
+        #theater-arena {
+            display: flex;
+            flex-grow: 1;
+            height: 74%;
+            position: relative;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 3%;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        /* HOW TO PLAY LEFT PANEL SYSTEM */
+        .instruction-side-panel {
+            width: 260px;
+            height: 90%;
+            background: linear-gradient(to bottom, #1d110a 0%, #0d0603 100%);
+            border: 2px solid #4a3716;
+            border-radius: 6px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-heading {
+            font-size: clamp(0.75rem, 2vh, 0.95rem);
+            font-weight: bold;
+            color: #ebd185;
+            text-align: center;
+            border-bottom: 1px solid #4a3716;
+            padding-bottom: 6px;
+            margin: 0 0 10px 0;
+            letter-spacing: 1px;
+        }
+
+        .instruction-steps-list {
+            margin: 0; padding: 0 0 0 12px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            list-style-type: none;
+        }
+
+        .step-item {
+            font-size: clamp(0.65rem, 1.5vh, 0.78rem);
+            line-height: 1.4;
+            margin-bottom: 8px;
+            color: #c7b38d;
+        }
+
+        /* Hyper Attention Point Styling Modification */
+        .step-item.alert-priority-rule {
+            color: #ff5555;
+            font-weight: bold;
+            background: rgba(255, 68, 68, 0.08);
+            padding: 4px 6px;
+            border-left: 2px solid #ff4444;
+            border-radius: 0 4px 4px 0;
+            margin-left: -12px;
+        }
+
+        .step-num {
+            color: #ebd185;
+            font-weight: bold;
+            margin-right: 4px;
+            font-family: 'Georgia', serif;
+        }
+        .step-item.alert-priority-rule .step-num {
+            color: #ff4444;
+        }
+
+        /* RIGHT INSET PARKING BAY SLOTS */
+        .side-parking-bay {
+            width: 65px;
+            height: 90%;
+            border-radius: 8px;
+            border: 2px solid #4a3716;
+            box-shadow: inset 0 6px 15px rgba(0,0,0,0.95);
+            background: linear-gradient(to right, #806526 0%, #b89342 50%, #664f1d 100%);
+            position: relative;
+            box-sizing: border-box;
+        }
+        .side-parking-bay::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        /* UNIFORM SCALED RESPONSIVE CHESSBOARD CONTAINER */
+        #sea-matrix-grid {
+            width: min(50vh, 50vw);
+            height: min(50vh, 50vw);
+            max-width: 420px;
+            max-height: 420px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 0px;
+            padding: 2%;
+            background: #120904;
+            border: 4px solid #0d0603;
+            outline: 2px solid #94711c;
+            border-radius: 2px;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.85);
+            box-sizing: border-box;
+        }
+
+        .matrix-coordinate-cell {
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            box-sizing: border-box;
+            border: 1px solid rgba(0,0,0,0.25);
+        }
+
+        .matrix-coordinate-cell.tile-light {
+            background: linear-gradient(135deg, #eddba4 0%, #bfa665 100%);
+            box-shadow: inset 1px 1px 1px rgba(255,255,255,0.3);
+        }
+        .matrix-coordinate-cell.tile-dark {
+            background: linear-gradient(135deg, #241a12 0%, #140e0a 100%);
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.7);
+        }
+
+        .matrix-coordinate-cell.valid-vector {
+            cursor: pointer;
+        }
+        .matrix-coordinate-cell.valid-vector::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle, rgba(255, 245, 200, 0.35) 0%, rgba(148, 113, 28, 0.1) 100%);
+            border: 1px inset #fff0c2;
+            pointer-events: none;
+        }
+
+        .cell-index-tag {
+            position: absolute; bottom: 4px; right: 6px;
+            font-size: clamp(0.6rem, 1.4vh, 0.8rem); font-weight: bold;
+            font-family: 'Georgia', serif;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .matrix-coordinate-cell.tile-light .cell-index-tag { color: rgba(54, 40, 10, 0.45); }
+        .matrix-coordinate-cell.tile-dark .cell-index-tag { color: rgba(255, 255, 255, 0.15); }
+
+        /* SCALABLE COIN MINTED TOKENS */
+        .pirate-ship-vessel {
+            width: 80%; height: 80%;
+            border-radius: 50%;
+            z-index: 50;
+            cursor: pointer;
+            box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            transition: transform 0.2s ease-out;
+        }
+
+        .pirate-ship-vessel.type-left {
+            background: radial-gradient(circle at 35% 35%, #fff0cc 0%, #dbac35 30%, #8c660d 75%, #423003 100%);
+            border: 2px double #fffaeb;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+        }
+        .pirate-ship-vessel.type-left::before {
+            content: 'L';
+            font-family: 'Georgia', serif;
+            font-size: clamp(0.8rem, 2.2vh, 1.4rem);
+            font-weight: bold;
+            color: #3d2d04;
+            text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.4);
+        }
+
+        .pirate-ship-vessel.type-right {
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #c4cbd1 30%, #6f7d8a 75%, #2d3840 100%);
+            border: 2px double #f4f6f7;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.7);
+        }
+        .pirate-ship-vessel.type-right::before {
+            content: 'R';
+            font-family: 'Georgia', serif;
+            font-size: clamp(0.8rem, 2.2vh, 1.4rem);
+            font-weight: bold;
+            color: #171d21;
+            text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .pirate-ship-vessel.focused-vessel {
+            transform: scale(1.15);
+            outline: 2px solid #ffffff;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.75) !important;
+        }
+
+        .copyright-footer {
+            height: 5%;
+            min-height: 25px;
+            background: rgba(10, 5, 2, 0.8);
+            border-top: 1px solid rgba(148, 113, 28, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.65rem, 1.3vh, 0.75rem);
+            letter-spacing: 1px;
+            color: rgba(186, 150, 66, 0.5);
+            font-family: sans-serif;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        /* OVERLAYS */
+        .curtain-modal-overlay {
+            position: absolute; width: 100%; height: 100%;
+            top: 0; left: 0; background: rgba(10, 5, 2, 0.96);
+            z-index: 500; display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(6px);
+        }
+        .modal-headline { font-size: 2.2rem; color: #e04444; margin: 0 0 10px 0; font-weight: bold; }
+        .modal-bodytext { font-size: 1rem; color: #bfa665; margin: 0 0 25px 0; }
+        
+        #victory-overlay { background: rgba(8, 15, 10, 0.98); border: 4px double #a68023; }
+        #victory-title { color: #eddba4; text-shadow: 0 2px 10px rgba(166, 128, 35, 0.4); }
+
+        #confetti-container {
+            position: absolute; width: 100%; height: 100%;
+            top: 0; left: 0; pointer-events: none; z-index: 510; overflow: hidden;
+        }
+        .confetti-particle {
+            position: absolute; width: 5px; height: 10px;
+            opacity: 0.85; top: -20px;
+            animation: fallConfetti var(--d) linear infinite;
+        }
+        @keyframes fallConfetti {
+            0% { transform: translateY(0) rotate(0deg); top: -20px; }
+            100% { transform: translateY(720px) rotate(720deg); top: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- INLINE BRANDING PLAQUE -->
+    <div class="royal-header-plaque">
+        <div class="plaque-vector-logo"></div>
+        <div class="plaque-title-text">Classic Royal Edition</div>
+    </div>
+
+    <div id="game-frame">
+        
+        <!-- HUD PANEL -->
+        <div id="radar-hud">
+            <div class="hud-title-plate">
+                <h2 class="hud-title">ROYAL CHESS MATRIX</h2>
+            </div>
+            <div class="control-cluster">
+                <button id="start-mission-btn" class="btn-ui" onclick="initiateNauticalDeployment()">Deploy Fleet</button>
+                <div class="counter-satellite-ring">
+                    <div id="countdown-core">14</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="top-staging-bar" class="fleet-staging-bar"></div>
+
+        <div id="theater-arena">
+            
+            <!-- LEFT HOW TO PLAY RULE SHEET -->
+            <div class="instruction-side-panel">
+                <h3 class="panel-heading">HOW TO PLAY</h3>
+                <ul class="instruction-steps-list">
+                    <li class="step-item"><span class="step-num">1.</span><strong>Objective:</strong> Invert the layout configuration by safely swapping the Left (L) and Right (R) fleets entirely.</li>
+                    <li class="step-item"><span class="step-num">2.</span><strong>Select Token:</strong> Click on any active coin piece to target its vector paths.</li>
+                    <li class="step-item alert-priority-rule"><span class="step-num">3.</span><strong>Valid Movement:</strong> Tokens move ONLY along open diagonal trajectories. Click highlighted cells to execute.</li>
+                    <li class="step-item"><span class="step-num">4.</span><strong>Restrictions:</strong> No jumping over other tokens. Horizontal and vertical steps are prohibited.</li>
+                    <li class="step-item"><span class="step-num">5.</span><strong>Move Economy:</strong> Balance paths wisely. Inversion must succeed within exactly 14 total moves.</li>
+                </ul>
+            </div>
+
+            <div id="sea-matrix-grid"></div>
+            <div id="right-bay" class="side-parking-bay"></div>
+        </div>
+
+        <div id="bottom-staging-bar" class="fleet-staging-bar"></div>
+
+        <div class="copyright-footer">
+            © Ragen Joshi
+        </div>
+
+        <!-- TIMEOUT OVERLAY -->
+        <div id="lockout-curtain" class="curtain-modal-overlay">
+            <h1 class="modal-headline">OUT OF MOVES</h1>
+            <p class="modal-bodytext">STRATEGIC MOVEMENT BOUNDS EXCEEDED</p>
+            <button class="btn-ui" onclick="location.reload()">Retry Operation</button>
+        </div>
+
+        <!-- VICTORY OVERLAY -->
+        <div id="victory-overlay" class="curtain-modal-overlay">
+            <div id="confetti-container"></div>
+            <h1 id="victory-title" class="modal-headline">CELEBRATION DECLARED!</h1>
+            <p class="modal-bodytext">Excellent navigation. The board fleets have successfully switched sides completely.</p>
+            <button class="btn-ui" onclick="location.reload()">Begin Anew</button>
+        </div>
+
+    </div>
+
+    <script>
+        let operationalMovesLeft = 14;
+        let runningMissionLive = false;
+        
+        let vesselFleet = [];
+        let networkCells = [];
+        let activeSelectionVessel = null;
+
+        const gridElement = document.getElementById('sea-matrix-grid');
+        const counterText = document.getElementById('countdown-core');
+        const curtainOverlay = document.getElementById('lockout-curtain');
+        const victoryOverlay = document.getElementById('victory-overlay');
+        const topBar = document.getElementById('top-staging-bar');
+        const bottomBar = document.getElementById('bottom-staging-bar');
+
+        function generateMatrixLayoutStructure() {
+            gridElement.innerHTML = '';
+            networkCells = [];
+            
+            for(let idx = 1; idx <= 16; idx++) {
+                let row = Math.floor((idx - 1) / 4) + 1;
+                let col = ((idx - 1) % 4) + 1;
+
+                let cell = document.createElement('div');
+                let isLight = (row + col) % 2 === 0;
+                cell.className = `matrix-coordinate-cell ${isLight ? 'tile-light' : 'tile-dark'}`;
+                
+                cell.dataset.id = idx;
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+
+                let textIndex = document.createElement('span');
+                textIndex.className = 'cell-index-tag';
+                textIndex.textContent = idx;
+                cell.appendChild(textIndex);
+
+                gridElement.appendChild(cell);
+                networkCells.push(cell);
+
+                cell.addEventListener('click', () => handleCellTargetLanding(row, col, idx));
+            }
+        }
+
+        function generateStagingLineupSlots() {
+            topBar.innerHTML = '';
+            bottomBar.innerHTML = '';
+            for(let i = 0; i < 4; i++) {
+                topBar.appendChild(Object.assign(document.createElement('div'), {className: 'staging-slot-anchor'}));
+                bottomBar.appendChild(Object.assign(document.createElement('div'), {className: 'staging-slot-anchor'}));
+            }
+        }
+
+        function setupFleetDataProfiles() {
+            document.querySelectorAll('.pirate-ship-vessel').forEach(el => el.remove());
+            vesselFleet = [];
+
+            [1, 5, 9, 13].forEach((cellId, i) => {
+                vesselFleet.push({ id: `v-green-${i}`, team: 'green', type: 'left', index: i, cellId: cellId, row: 0, col: 0 });
+            });
+            [4, 8, 12, 16].forEach((cellId, i) => {
+                vesselFleet.push({ id: `v-red-${i}`, team: 'red', type: 'right', index: i, cellId: cellId, row: 0, col: 0 });
+            });
+        }
+
+        function renderFleetStagingLineup() {
+            let anchorsTop = topBar.querySelectorAll('.staging-slot-anchor');
+            let anchorsBottom = bottomBar.querySelectorAll('.staging-slot-anchor');
+
+            vesselFleet.forEach(vessel => {
+                let div = document.createElement('div');
+                div.className = `pirate-ship-vessel type-${vessel.type}`;
+                div.id = vessel.id;
+
+                if (vessel.team === 'green') {
+                    anchorsTop[vessel.index].appendChild(div);
+                } else {
+                    anchorsBottom[vessel.index].appendChild(div);
+                }
+
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleVesselSelectionClick(vessel, div);
+                });
+            });
+        }
+
+        function initializeLevelCoreEnvironment() {
+            operationalMovesLeft = 14;
+            runningMissionLive = false;
+            activeSelectionVessel = null;
+            
+            document.getElementById('start-mission-btn').disabled = false;
+            victoryOverlay.style.display = 'none';
+            curtainOverlay.style.display = 'none';
+
+            generateMatrixLayoutStructure();
+            generateStagingLineupSlots();
+            setupFleetDataProfiles();
+            renderFleetStagingLineup();
+            syncHUDMetricsPanel();
+        }
+
+        function initiateNauticalDeployment() {
+            document.getElementById('start-mission-btn').disabled = true;
+
+            vesselFleet.forEach(vessel => {
+                let cell = networkCells.find(c => parseInt(c.dataset.id) === vessel.cellId);
+                vessel.row = parseInt(cell.dataset.row);
+                vessel.col = parseInt(cell.dataset.col);
+
+                let div = document.getElementById(vessel.id);
+                cell.appendChild(div);
+            });
+
+            runningMissionLive = true;
+            syncHUDMetricsPanel();
+        }
+
+        function handleVesselSelectionClick(vessel, element) {
+            if(!runningMissionLive) return;
+
+            vesselFleet.forEach(v => document.getElementById(v.id).classList.remove('focused-vessel'));
+            clearVectorMovementHighlighters();
+
+            activeSelectionVessel = vessel;
+            element.classList.add('focused-vessel');
+            calculateAvailableDiagonalVectors(vessel);
+        }
+
+        function calculateAvailableDiagonalVectors(vessel) {
+            networkCells.forEach(cell => {
+                let cRow = parseInt(cell.dataset.row);
+                let cCol = parseInt(cell.dataset.col);
+                let cId = parseInt(cell.dataset.id);
+
+                if(vesselFleet.some(v => v.cellId === cId)) return;
+
+                let rDiff = Math.abs(cRow - vessel.row);
+                let cDiff = Math.abs(cCol - vessel.col);
+
+                if(rDiff === cDiff && rDiff > 0) {
+                    if(isVectorTrajectoryClear(vessel.row, vessel.col, cRow, cCol)) {
+                        cell.classList.add('valid-vector');
+                    }
+                }
+            });
+        }
+
+        function isVectorTrajectoryClear(startR, startC, endR, endC) {
+            let stepR = endR > startR ? 1 : -1;
+            let stepC = endC > startC ? 1 : -1;
+            let currR = startR + stepR;
+            let currC = startC + stepC;
+
+            while(currR !== endR && currC !== endC) {
+                let targetId = (currR - 1) * 4 + currC;
+                if(vesselFleet.some(v => v.cellId === targetId)) return false;
+                currR += stepR; currC += stepC;
+            }
+            return true;
+        }
+
+        function handleCellTargetLanding(row, col, cellId) {
+            if(!runningMissionLive || !activeSelectionVessel) return;
+
+            let targetCell = networkCells.find(c => parseInt(c.dataset.id) === cellId);
+            if(!targetCell.classList.contains('valid-vector')) return;
+
+            activeSelectionVessel.cellId = cellId;
+            activeSelectionVessel.row = row;
+            activeSelectionVessel.col = col;
+
+            let el = document.getElementById(activeSelectionVessel.id);
+            targetCell.appendChild(el); 
+
+            activeSelectionVessel = null;
+            vesselFleet.forEach(v => document.getElementById(v.id).classList.remove('focused-vessel'));
+            clearVectorMovementHighlighters();
+
+            operationalMovesLeft--;
+            syncHUDMetricsPanel();
+
+            if (evaluateTrueInterchangeWin()) {
+                runningMissionLive = false;
+                triggerVictoryCelebrationOverlay();
+                return;
+            }
+
+            if(operationalMovesLeft <= 0) {
+                runningMissionLive = false;
+                curtainOverlay.style.display = 'flex';
+            }
+        }
+
+        function evaluateTrueInterchangeWin() {
+            let greensSwapped = vesselFleet.filter(v => v.team === 'green').every(v => v.col === 4);
+            let redsSwapped = vesselFleet.filter(v => v.team === 'red').every(v => v.col === 1);
+            return (greensSwapped && redsSwapped);
+        }
+
+        function triggerVictoryCelebrationOverlay() {
+            victoryOverlay.style.display = 'flex';
+            let container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            
+            for(let i=0; i<120; i++) {
+                let p = document.createElement('div');
+                p.className = 'confetti-particle';
+                p.style.left = `${Math.random() * 100}%`;
+                p.style.setProperty('--d', `${1.2 + Math.random() * 2}s`);
+                p.style.background = ['#ffe89e', '#b28a22', '#ffffff', '#fcebb6', '#d8be7b'][Math.floor(Math.random()*5)];
+                container.appendChild(p);
+            }
+        }
+
+        function syncHUDMetricsPanel() {
+            counterText.textContent = operationalMovesLeft;
+        }
+
+        function clearVectorMovementHighlighters() {
+            networkCells.forEach(c => c.classList.remove('valid-vector'));
+        }
+
+        initializeLevelCoreEnvironment();
+    </script>
+</body>
+</html>
